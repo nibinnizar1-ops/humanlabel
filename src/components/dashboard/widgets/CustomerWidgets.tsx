@@ -35,7 +35,7 @@ export function CustomersTotal({ widgetId }: CustomerWidgetsProps) {
 
   return (
     <BaseWidget title="Total Customers" icon={<Users className="h-4 w-4" />}>
-      <p className="text-2xl font-bold">{count}</p>
+      <p className="text-xl sm:text-2xl font-bold">{count}</p>
       <p className="text-xs text-muted-foreground mt-1">Total registered customers</p>
     </BaseWidget>
   );
@@ -81,11 +81,11 @@ export function CustomersTopSpenders({ widgetId }: CustomerWidgetsProps) {
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-medium text-muted-foreground w-6">#{index + 1}</span>
-                  <span className="text-sm font-medium truncate">{customer.name}</span>
+                  <span className="text-xs font-medium text-muted-foreground w-4 sm:w-6 flex-shrink-0">#{index + 1}</span>
+                  <span className="text-xs sm:text-sm font-medium truncate">{customer.name}</span>
                 </div>
-                <div className="text-right">
-                  <p className="text-sm font-semibold">{formatCurrency(customer.total_spent)}</p>
+                <div className="text-right flex-shrink-0">
+                  <p className="text-xs sm:text-sm font-semibold">{formatCurrency(customer.total_spent)}</p>
                   <p className="text-xs text-muted-foreground">{formatCurrency(customer.total_charity)} charity</p>
                 </div>
               </div>
@@ -126,7 +126,7 @@ export function CustomersNewThisMonth({ widgetId }: CustomerWidgetsProps) {
 
   return (
     <BaseWidget title="New Customers This Month" icon={<Users className="h-4 w-4" />}>
-      <p className="text-2xl font-bold">{count}</p>
+      <p className="text-xl sm:text-2xl font-bold">{count}</p>
       <p className="text-xs text-muted-foreground mt-1">New customers this month</p>
     </BaseWidget>
   );

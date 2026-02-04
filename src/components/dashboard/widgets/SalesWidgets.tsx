@@ -38,7 +38,7 @@ export function SalesToday({ widgetId }: SalesWidgetsProps) {
 
   return (
     <BaseWidget title="Today's Sales" icon={<ShoppingCart className="h-4 w-4" />}>
-      <p className="text-2xl font-bold">{formatCurrency(amount)}</p>
+      <p className="text-xl sm:text-2xl font-bold">{formatCurrency(amount)}</p>
       <p className="text-xs text-muted-foreground mt-1">Sales made today</p>
     </BaseWidget>
   );
@@ -75,7 +75,7 @@ export function SalesThisMonth({ widgetId }: SalesWidgetsProps) {
 
   return (
     <BaseWidget title="This Month Sales" icon={<ShoppingCart className="h-4 w-4" />}>
-      <p className="text-2xl font-bold">{formatCurrency(amount)}</p>
+      <p className="text-xl sm:text-2xl font-bold">{formatCurrency(amount)}</p>
       <p className="text-xs text-muted-foreground mt-1">Sales this month</p>
     </BaseWidget>
   );
@@ -108,7 +108,7 @@ export function SalesTotalRevenue({ widgetId }: SalesWidgetsProps) {
 
   return (
     <BaseWidget title="Total Revenue" icon={<TrendingUp className="h-4 w-4" />} size="medium">
-      <p className="text-3xl font-bold">{formatCurrency(amount)}</p>
+      <p className="text-2xl sm:text-3xl font-bold">{formatCurrency(amount)}</p>
       <p className="text-xs text-muted-foreground mt-1">Lifetime revenue from all sales</p>
     </BaseWidget>
   );
@@ -171,11 +171,11 @@ export function SalesTopProducts({ widgetId }: SalesWidgetsProps) {
           {products.map((item, index) => (
             <div key={item.product.id} className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="text-xs font-medium text-muted-foreground w-6">#{index + 1}</span>
-                <span className="text-sm font-medium truncate">{item.product.name}</span>
+                <span className="text-xs font-medium text-muted-foreground w-4 sm:w-6 flex-shrink-0">#{index + 1}</span>
+                <span className="text-xs sm:text-sm font-medium truncate">{item.product.name}</span>
               </div>
-              <div className="text-right">
-                <p className="text-sm font-semibold">{formatCurrency(item.revenue)}</p>
+              <div className="text-right flex-shrink-0">
+                <p className="text-xs sm:text-sm font-semibold">{formatCurrency(item.revenue)}</p>
                 <p className="text-xs text-muted-foreground">{item.sales} units</p>
               </div>
             </div>

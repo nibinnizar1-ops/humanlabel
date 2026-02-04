@@ -43,7 +43,7 @@ export function ProductsLifetimeStockValue({ widgetId }: ProductWidgetsProps) {
 
   return (
     <BaseWidget title="Lifetime Stock Value" icon={<Boxes className="h-4 w-4" />}>
-      <p className="text-2xl font-bold">{formatCurrency(value)}</p>
+      <p className="text-xl sm:text-2xl font-bold">{formatCurrency(value)}</p>
       <p className="text-xs text-muted-foreground mt-1">Total value of all stock ever purchased</p>
     </BaseWidget>
   );
@@ -84,7 +84,7 @@ export function ProductsCurrentInventoryValue({ widgetId }: ProductWidgetsProps)
 
   return (
     <BaseWidget title="Current Inventory Value" icon={<Boxes className="h-4 w-4" />}>
-      <p className="text-2xl font-bold">{formatCurrency(value)}</p>
+      <p className="text-xl sm:text-2xl font-bold">{formatCurrency(value)}</p>
       <p className="text-xs text-muted-foreground mt-1">Value of active products in stock</p>
     </BaseWidget>
   );
@@ -125,12 +125,12 @@ export function ProductsOutOfStockAlert({ widgetId }: ProductWidgetsProps) {
     <BaseWidget title="Out of Stock Alert" icon={<AlertTriangle className="h-4 w-4 text-warning" />}>
       {products.length === 0 ? (
         <div className="space-y-1">
-          <p className="text-lg font-semibold text-success">All products in stock</p>
+          <p className="text-base sm:text-lg font-semibold text-success">All products in stock</p>
           <p className="text-xs text-muted-foreground">No out of stock items</p>
         </div>
       ) : (
         <div className="space-y-2">
-          <p className="text-lg font-semibold text-warning">{products.length} product{products.length > 1 ? 's' : ''} out of stock</p>
+          <p className="text-base sm:text-lg font-semibold text-warning">{products.length} product{products.length > 1 ? 's' : ''} out of stock</p>
           <div className="space-y-1 max-h-32 overflow-y-auto">
             {products.slice(0, 5).map(product => (
               <Link key={product.id} to={`/products/${product.id}`} className="block text-sm hover:underline">
@@ -210,12 +210,12 @@ export function ProductsFastMoving({ widgetId }: ProductWidgetsProps) {
         <div className="space-y-3">
           {products.map((item, index) => (
             <div key={item.product.id} className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-medium text-muted-foreground w-6">#{index + 1}</span>
-                <span className="text-sm font-medium truncate">{item.product.name}</span>
+              <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1">
+                <span className="text-xs font-medium text-muted-foreground w-4 sm:w-6 flex-shrink-0">#{index + 1}</span>
+                <span className="text-xs sm:text-sm font-medium truncate">{item.product.name}</span>
               </div>
-              <div className="text-right">
-                <p className="text-sm font-semibold">{item.sales} units</p>
+              <div className="text-right flex-shrink-0">
+                <p className="text-xs sm:text-sm font-semibold">{item.sales} units</p>
                 <p className="text-xs text-muted-foreground">{formatCurrency(item.revenue)}</p>
               </div>
             </div>
@@ -251,7 +251,7 @@ export function ProductsTotalCount({ widgetId }: ProductWidgetsProps) {
 
   return (
     <BaseWidget title="Total Products" icon={<Package className="h-4 w-4" />}>
-      <p className="text-2xl font-bold">{count}</p>
+      <p className="text-xl sm:text-2xl font-bold">{count}</p>
       <p className="text-xs text-muted-foreground mt-1">Total products in catalog</p>
     </BaseWidget>
   );
@@ -300,7 +300,7 @@ export function ProductsLowStockAlert({ widgetId }: ProductWidgetsProps) {
         </div>
       ) : (
         <div className="space-y-2">
-          <p className="text-lg font-semibold text-warning">{count} product{count > 1 ? 's' : ''} with stock-outs</p>
+          <p className="text-base sm:text-lg font-semibold text-warning">{count} product{count > 1 ? 's' : ''} with stock-outs</p>
           <div className="space-y-1">
             {products.map(product => (
               <Link key={product.id} to={`/products/${product.id}`} className="block text-sm hover:underline truncate">

@@ -36,7 +36,7 @@ export function ProfitTotal({ widgetId }: ProfitWidgetsProps) {
 
   return (
     <BaseWidget title="Total Profit" icon={<TrendingUp className="h-4 w-4" />} size="medium">
-      <p className="text-3xl font-bold">{formatCurrency(profit)}</p>
+      <p className="text-2xl sm:text-3xl font-bold">{formatCurrency(profit)}</p>
       <p className="text-xs text-muted-foreground mt-1">Total profit from all sales</p>
     </BaseWidget>
   );
@@ -73,7 +73,7 @@ export function ProfitMarginPercentage({ widgetId }: ProfitWidgetsProps) {
 
   return (
     <BaseWidget title="Profit Margin %" icon={<Percent className="h-4 w-4" />}>
-      <p className="text-2xl font-bold">{margin.toFixed(1)}%</p>
+      <p className="text-xl sm:text-2xl font-bold">{margin.toFixed(1)}%</p>
       <p className="text-xs text-muted-foreground mt-1">Average profit margin</p>
     </BaseWidget>
   );
@@ -113,15 +113,15 @@ export function ProfitAfterCharity({ widgetId }: ProfitWidgetsProps) {
   return (
     <BaseWidget title="Profit After Charity" icon={<TrendingUp className="h-4 w-4" />} size="medium">
       <div className="space-y-2">
-        <p className="text-3xl font-bold">{formatCurrency(profitAfterCharity)}</p>
+        <p className="text-2xl sm:text-3xl font-bold">{formatCurrency(profitAfterCharity)}</p>
         <div className="pt-2 border-t space-y-1">
           <div className="flex justify-between text-xs">
             <span className="text-muted-foreground">Total Profit</span>
-            <span className="font-medium">{formatCurrency(profit)}</span>
+            <span className="font-medium text-xs sm:text-sm">{formatCurrency(profit)}</span>
           </div>
           <div className="flex justify-between text-xs">
             <span className="text-muted-foreground">Charity</span>
-            <span className="font-medium text-success">{formatCurrency(charity)}</span>
+            <span className="font-medium text-success text-xs sm:text-sm">{formatCurrency(charity)}</span>
           </div>
         </div>
       </div>

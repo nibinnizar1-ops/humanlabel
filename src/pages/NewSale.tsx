@@ -224,6 +224,7 @@ export default function NewSale() {
           created_by: user?.id,
           discount_amount: calculations.discountAmount,
           discount_percentage: formData.discount_percentage,
+          sale_date: new Date().toISOString(), // Explicitly set sale date
         })
         .select()
         .single();

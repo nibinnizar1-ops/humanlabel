@@ -36,7 +36,7 @@ export function CharityTotalGenerated({ widgetId }: CharityWidgetsProps) {
 
   return (
     <BaseWidget title="Total Charity Generated" icon={<Heart className="h-4 w-4" />} size="medium">
-      <p className="text-3xl font-bold">{formatCurrency(amount)}</p>
+      <p className="text-2xl sm:text-3xl font-bold">{formatCurrency(amount)}</p>
       <p className="text-xs text-muted-foreground mt-1">Total charity from all sales</p>
     </BaseWidget>
   );
@@ -71,7 +71,7 @@ export function CharityToPay({ widgetId }: CharityWidgetsProps) {
 
   return (
     <BaseWidget title="Charity Amount to Pay" icon={<Heart className="h-4 w-4" />} size="medium">
-      <p className="text-3xl font-bold">{formatCurrency(amount)}</p>
+      <p className="text-2xl sm:text-3xl font-bold">{formatCurrency(amount)}</p>
       <p className="text-xs text-muted-foreground mt-1">Total charity to be paid</p>
     </BaseWidget>
   );
@@ -108,7 +108,7 @@ export function CharityThisMonth({ widgetId }: CharityWidgetsProps) {
 
   return (
     <BaseWidget title="This Month Charity" icon={<Calendar className="h-4 w-4" />}>
-      <p className="text-2xl font-bold">{formatCurrency(amount)}</p>
+      <p className="text-xl sm:text-2xl font-bold">{formatCurrency(amount)}</p>
       <p className="text-xs text-muted-foreground mt-1">Charity generated this month</p>
     </BaseWidget>
   );

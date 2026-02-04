@@ -16,8 +16,11 @@ import Sales from "./pages/Sales";
 import NewSale from "./pages/NewSale";
 import Customers from "./pages/Customers";
 import CustomerForm from "./pages/CustomerForm";
+import CustomerDetail from "./pages/CustomerDetail";
+import CustomerEdit from "./pages/CustomerEdit";
 import Expenses from "./pages/Expenses";
 import ExpenseForm from "./pages/ExpenseForm";
+import ExpenseEdit from "./pages/ExpenseEdit";
 import Charity from "./pages/Charity";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
@@ -90,7 +93,13 @@ const App = () => (
             
             <Route path="/customers/:id" element={
               <ProtectedRoute>
-                <Customers />
+                <CustomerDetail />
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/customers/:id/edit" element={
+              <ProtectedRoute allowedRoles={['admin', 'staff']}>
+                <CustomerEdit />
               </ProtectedRoute>
             } />
             
@@ -103,6 +112,12 @@ const App = () => (
             <Route path="/expenses/new" element={
               <ProtectedRoute allowedRoles={['admin', 'staff']}>
                 <ExpenseForm />
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/expenses/:id/edit" element={
+              <ProtectedRoute allowedRoles={['admin', 'staff']}>
+                <ExpenseEdit />
               </ProtectedRoute>
             } />
             

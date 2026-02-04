@@ -40,25 +40,25 @@ export default function Dashboard() {
         action={<DashboardCustomizer />}
       />
       
-      <div className="p-4 space-y-6">
+      <div className="p-3 sm:p-4 space-y-4 sm:space-y-6 pb-20 sm:pb-4">
         {/* Welcome Section */}
         <div className="space-y-1">
-          <h2 className="text-xl font-semibold">
+          <h2 className="text-lg sm:text-xl font-semibold">
             Welcome back, {profile?.full_name?.split(' ')[0] || 'there'}!
           </h2>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-xs sm:text-sm text-muted-foreground">
             Here's what's happening with Human Label today.
           </p>
         </div>
 
         {/* Customizable Widgets Grid */}
         {enabledWidgets.length === 0 ? (
-          <div className="text-center py-12 space-y-3">
-            <p className="text-muted-foreground">No widgets enabled</p>
+          <div className="text-center py-8 sm:py-12 space-y-3">
+            <p className="text-sm sm:text-base text-muted-foreground">No widgets enabled</p>
             <DashboardCustomizer />
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {enabledWidgets.map((widget) => (
               <WidgetRenderer key={widget.id} widgetId={widget.id} />
             ))}
@@ -67,14 +67,14 @@ export default function Dashboard() {
 
         {/* Quick Actions */}
         {canEdit && (
-          <div className="space-y-3">
-            <h3 className="font-semibold">Quick Actions</h3>
-            <div className="grid grid-cols-4 gap-2">
+          <div className="space-y-2 sm:space-y-3">
+            <h3 className="font-semibold text-sm sm:text-base">Quick Actions</h3>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {filteredActions.map((action) => (
                 <Link key={action.path} to={action.path}>
-                  <div className="quick-action">
-                    <action.icon className={cn("h-6 w-6", action.color)} />
-                    <span className="text-xs font-medium text-center leading-tight">
+                  <div className="quick-action min-h-[80px] sm:min-h-[90px]">
+                    <action.icon className={cn("h-5 w-5 sm:h-6 sm:w-6", action.color)} />
+                    <span className="text-xs font-medium text-center leading-tight px-1">
                       {action.label}
                     </span>
                   </div>
@@ -87,8 +87,8 @@ export default function Dashboard() {
         {/* Primary Action for Staff */}
         {canEdit && (
           <Link to="/sales/new" className="block">
-            <Button className="w-full h-14 text-base">
-              <Plus className="mr-2 h-5 w-5" />
+            <Button className="w-full h-12 sm:h-14 text-sm sm:text-base">
+              <Plus className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
               Record New Sale
             </Button>
           </Link>

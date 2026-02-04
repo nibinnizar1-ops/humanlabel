@@ -36,7 +36,7 @@ export function ExpensesTotal({ widgetId }: ExpenseWidgetsProps) {
 
   return (
     <BaseWidget title="Total Expenses" icon={<Receipt className="h-4 w-4" />}>
-      <p className="text-2xl font-bold">{formatCurrency(amount)}</p>
+      <p className="text-xl sm:text-2xl font-bold">{formatCurrency(amount)}</p>
       <p className="text-xs text-muted-foreground mt-1">Total expenses recorded</p>
     </BaseWidget>
   );
@@ -73,7 +73,7 @@ export function ExpensesThisMonth({ widgetId }: ExpenseWidgetsProps) {
 
   return (
     <BaseWidget title="This Month Expenses" icon={<Calendar className="h-4 w-4" />}>
-      <p className="text-2xl font-bold">{formatCurrency(amount)}</p>
+      <p className="text-xl sm:text-2xl font-bold">{formatCurrency(amount)}</p>
       <p className="text-xs text-muted-foreground mt-1">Expenses this month</p>
     </BaseWidget>
   );
@@ -123,8 +123,8 @@ export function ExpensesByCategory({ widgetId }: ExpenseWidgetsProps) {
         <div className="space-y-3">
           {categories.map((item) => (
             <div key={item.category} className="flex items-center justify-between">
-              <span className="text-sm font-medium">{item.category}</span>
-              <span className="text-sm font-semibold">{formatCurrency(item.amount)}</span>
+              <span className="text-xs sm:text-sm font-medium">{item.category}</span>
+              <span className="text-xs sm:text-sm font-semibold">{formatCurrency(item.amount)}</span>
             </div>
           ))}
         </div>

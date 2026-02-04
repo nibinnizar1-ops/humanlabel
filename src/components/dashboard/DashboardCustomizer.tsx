@@ -43,9 +43,10 @@ export function DashboardCustomizer() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-2">
-          <Settings className="h-4 w-4" />
-          Customize Dashboard
+        <Button variant="outline" size="sm" className="gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-3">
+          <Settings className="h-3 w-3 sm:h-4 sm:w-4" />
+          <span className="hidden sm:inline">Customize Dashboard</span>
+          <span className="sm:hidden">Customize</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto w-[95vw] sm:w-full">

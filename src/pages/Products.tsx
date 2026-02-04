@@ -9,6 +9,8 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Search, Package, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { StockManager } from '@/components/products/StockManager';
+import { toast } from 'sonner';
 
 export default function Products() {
   const { isAdmin, canEdit } = useAuth();
@@ -105,64 +107,82 @@ export default function Products() {
             </div>
           ) : (
             filteredProducts.map((product) => (
-              <Link 
-                key={product.id} 
-                to={`/products/${product.id}`}
-                className="block"
-              >
-                <div className="stat-card flex items-center gap-3 transition-colors hover:bg-secondary/30">
-                  {/* Product Image */}
-                  <div className="h-14 w-14 rounded-lg bg-secondary flex items-center justify-center flex-shrink-0">
-                    {product.images?.[0] ? (
-                      <img 
-                        src={product.images[0]} 
-                        alt={product.name}
-                        className="h-full w-full object-cover rounded-lg"
-                      />
-                    ) : (
-                      <Package className="h-6 w-6 text-muted-foreground" />
-                    )}
-                  </div>
-
-                  {/* Product Info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <h3 className="font-medium truncate">{product.name}</h3>
-                        <p className="text-sm text-muted-foreground">{product.sku}</p>
-                      </div>
-                      <div className="text-right flex-shrink-0">
-                        <p className="font-semibold">{formatCurrency(product.selling_price)}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {product.charity_percentage}% charity
-                        </p>
-                      </div>
+              <div key={product.id} className="stat-card">
+                <div className="flex items-center gap-3">
+                  <Link 
+                    to={`/products/${product.id}`}
+                    className="flex-1 flex items-center gap-3 min-w-0"
+                  >
+                    {/* Product Image */}
+                    <div className="h-14 w-14 rounded-lg bg-secondary flex items-center justify-center flex-shrink-0">
+                      {product.images?.[0] ? (
+                        <img 
+                          src={product.images[0]} 
+                          alt={product.name}
+                          className="h-full w-full object-cover rounded-lg"
+                        />
+                      ) : (
+                        <Package className="h-6 w-6 text-muted-foreground" />
+                      )}
                     </div>
 
-                    <div className="flex items-center gap-2 mt-1.5">
-                      <Badge variant="secondary" className="text-xs">
-                        {product.category}
-                      </Badge>
-                      {product.inventory && (
-                        <span className={cn(
-                          "text-xs font-medium",
-                          isLowStock(product) ? "text-warning" : "text-muted-foreground"
-                        )}>
-                          {isLowStock(product) && (
-                            <AlertTriangle className="inline h-3 w-3 mr-0.5" />
-                          )}
-                          {product.inventory.available_quantity} in stock
-                        </span>
-                      )}
-                      {!product.is_active && (
-                        <Badge variant="outline" className="text-xs text-muted-foreground">
-                          Inactive
+                    {/* Product Info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <h3 className="font-medium truncate">{product.name}</h3>
+                          <p className="text-sm text-muted-foreground">{product.sku}</p>
+                        </div>
+                        <div className="text-right flex-shrink-0">
+                          <p className="font-semibold">{formatCurrency(product.selling_price)}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {product.charity_percentage}% charity
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 mt-1.5">
+                        <Badge variant="secondary" className="text-xs">
+                          {product.category}
                         </Badge>
-                      )}
+                        {product.size_inventory && (
+                          <span className="text-xs text-muted-foreground">
+                            M:{product.size_inventory.M || 0} L:{product.size_inventory.L || 0} XL:{product.size_inventory.XL || 0} XXL:{product.size_inventory.XXL || 0}
+                          </span>
+                        )}
+                        {product.inventory && (
+                          <span className={cn(
+                            "text-xs font-medium",
+                            isLowStock(product) ? "text-warning" : "text-muted-foreground"
+                          )}>
+                            {isLowStock(product) && (
+                              <AlertTriangle className="inline h-3 w-3 mr-0.5" />
+                            )}
+                            {product.inventory.available_quantity} in stock
+                          </span>
+                        )}
+                        {!product.is_active && (
+                          <Badge variant="outline" className="text-xs text-muted-foreground">
+                            Inactive
+                          </Badge>
+                        )}
+                      </div>
                     </div>
-                  </div>
+                  </Link>
+
+                  {/* Quick Actions */}
+                  {canEdit && (
+                    <div className="flex-shrink-0">
+                      <StockManager
+                        productId={product.id}
+                        productName={product.name}
+                        currentInventory={product.size_inventory || { M: 0, L: 0, XL: 0, XXL: 0 }}
+                        onStockUpdated={fetchProducts}
+                      />
+                    </div>
+                  )}
                 </div>
-              </Link>
+              </div>
             ))
           )}
         </div>

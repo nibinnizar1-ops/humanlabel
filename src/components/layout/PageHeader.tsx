@@ -37,32 +37,32 @@ export function PageHeader({ title, showBack, action, showLogo }: PageHeaderProp
 
   return (
     <header className="page-header">
-      <div className="flex items-center justify-between px-4 py-3">
-        <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3">
+        <div className="flex items-center gap-2 min-w-0 flex-1">
           {showBack && (
             <Button
               variant="ghost"
               size="icon"
               onClick={() => navigate(-1)}
-              className="h-9 w-9"
+              className="h-8 w-8 sm:h-9 sm:w-9 flex-shrink-0"
             >
-              <ChevronLeft className="h-5 w-5" />
+              <ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5" />
             </Button>
           )}
           {showLogo ? (
-            <img src={logo} alt="Human Label" className="h-6" />
+            <img src={logo} alt="Human Label" className="h-5 sm:h-6 flex-shrink-0" />
           ) : (
-            <h1 className="text-lg font-semibold">{title}</h1>
+            <h1 className="text-base sm:text-lg font-semibold truncate">{title}</h1>
           )}
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
           {action}
           
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full">
-                <Avatar className="h-8 w-8">
+              <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9 rounded-full">
+                <Avatar className="h-7 w-7 sm:h-8 sm:w-8">
                   <AvatarFallback className="bg-accent text-accent-foreground text-xs">
                     {initials}
                   </AvatarFallback>

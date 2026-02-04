@@ -6,8 +6,9 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Receipt, Calendar } from 'lucide-react';
+import { Plus, Receipt, Calendar, Edit, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
+import { toast } from 'sonner';
 
 const categoryColors: Record<string, string> = {
   Fabric: 'bg-blue-100 text-blue-800',
@@ -40,6 +41,27 @@ export default function Expenses() {
       console.error('Error fetching expenses:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteExpense = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this expense?')) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('expenses')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast.success('Expense deleted successfully');
+      fetchExpenses();
+    } catch (error: any) {
+      console.error('Error deleting expense:', error);
+      toast.error(error.message || 'Failed to delete expense');
     }
   };
 
@@ -143,9 +165,28 @@ export default function Expenses() {
                         </p>
                       </div>
 
-                      <p className="font-semibold text-lg flex-shrink-0">
-                        {formatCurrency(expense.amount)}
-                      </p>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <p className="font-semibold text-lg">
+                          {formatCurrency(expense.amount)}
+                        </p>
+                        {canEdit && (
+                          <div className="flex items-center gap-1">
+                            <Link to={`/expenses/${expense.id}/edit`}>
+                              <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                            </Link>
+                            <Button 
+                              size="sm" 
+                              variant="ghost" 
+                              className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                              onClick={() => handleDeleteExpense(expense.id)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}

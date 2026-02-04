@@ -24,19 +24,23 @@ export function BaseWidget({
 
   return (
     <div className={cn(
-      "stat-card",
+      "stat-card p-3 sm:p-4",
       sizeClasses[size],
       className
     )}>
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="font-semibold text-sm">{title}</h3>
+      <div className="flex items-center justify-between mb-2 sm:mb-3">
+        <h3 className="font-semibold text-xs sm:text-sm truncate flex-1 pr-2">{title}</h3>
         {icon && (
-          <div className="p-1.5 rounded-lg bg-secondary">
-            {icon}
+          <div className="p-1 sm:p-1.5 rounded-lg bg-secondary flex-shrink-0">
+            <div className="h-3 w-3 sm:h-4 sm:w-4">
+              {icon}
+            </div>
           </div>
         )}
       </div>
-      {children}
+      <div className="text-sm sm:text-base">
+        {children}
+      </div>
     </div>
   );
 }
