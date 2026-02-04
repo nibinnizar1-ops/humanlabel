@@ -13,7 +13,8 @@ const sizes: (keyof SizeInventory)[] = ['M', 'L', 'XL', 'XXL'];
 
 export function SizeInventoryInput({ value, onChange }: SizeInventoryInputProps) {
   const handleChange = (size: keyof SizeInventory, quantity: string) => {
-    const num = parseInt(quantity) || 0;
+    // If empty, keep as 0 internally but display as empty
+    const num = quantity === '' ? 0 : parseInt(quantity) || 0;
     onChange({ ...value, [size]: Math.max(0, num) });
   };
 
@@ -36,7 +37,7 @@ export function SizeInventoryInput({ value, onChange }: SizeInventoryInputProps)
               htmlFor={`size-${size}`} 
               className={cn(
                 "text-xs text-center block",
-                value[size] === 0 && "text-destructive"
+                value[size] === 0 && "text-muted-foreground"
               )}
             >
               {size}
@@ -45,18 +46,16 @@ export function SizeInventoryInput({ value, onChange }: SizeInventoryInputProps)
               id={`size-${size}`}
               type="number"
               min="0"
-              value={value[size]}
+              placeholder=""
+              value={value[size] === 0 ? '' : value[size]}
               onChange={(e) => handleChange(size, e.target.value)}
-              className={cn(
-                "text-center h-10",
-                value[size] === 0 && "border-destructive/50 bg-destructive/5"
-              )}
+              className="text-center h-10"
             />
           </div>
         ))}
       </div>
 
-      {stockOutSizes.length > 0 && (
+      {stockOutSizes.length > 0 && stockOutSizes.length < 4 && (
         <div className="flex items-center gap-2 p-2 rounded-lg bg-destructive/10 text-destructive text-xs">
           <AlertCircle className="h-3.5 w-3.5 flex-shrink-0" />
           <span>
