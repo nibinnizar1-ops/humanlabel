@@ -42,6 +42,8 @@ export default function NewSale() {
     customer_name: '',
     customer_mobile: '',
     customer_email: '',
+    discount_amount: 0,
+    discount_percentage: 0,
   });
 
   useEffect(() => {
@@ -102,14 +104,27 @@ export default function NewSale() {
     ? (selectedProduct.size_inventory?.[formData.size] || 0)
     : 0;
   
-  const calculations = selectedProduct ? {
-    unitPrice: selectedProduct.selling_price,
-    saleAmount: selectedProduct.selling_price * formData.quantity,
-    costAmount: selectedProduct.cost_price * formData.quantity,
-    profit: (selectedProduct.selling_price - selectedProduct.cost_price) * formData.quantity,
-    charityAmount: ((selectedProduct.selling_price - selectedProduct.cost_price) * formData.quantity * selectedProduct.charity_percentage) / 100,
-    charityPercentage: selectedProduct.charity_percentage,
-  } : null;
+  const calculations = selectedProduct ? (() => {
+    const subtotal = selectedProduct.selling_price * formData.quantity;
+    const discountAmt = formData.discount_percentage > 0 
+      ? (subtotal * formData.discount_percentage) / 100 
+      : formData.discount_amount;
+    const finalAmount = subtotal - discountAmt;
+    const costAmount = selectedProduct.cost_price * formData.quantity;
+    const profit = finalAmount - costAmount;
+    const charityAmount = Math.max(0, (profit * selectedProduct.charity_percentage) / 100);
+    
+    return {
+      unitPrice: selectedProduct.selling_price,
+      subtotal,
+      discountAmount: discountAmt,
+      saleAmount: finalAmount,
+      costAmount,
+      profit,
+      charityAmount,
+      charityPercentage: selectedProduct.charity_percentage,
+    };
+  })() : null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -163,6 +178,8 @@ export default function NewSale() {
           charity_amount: calculations.charityAmount,
           customer_email: formData.customer_email || null,
           created_by: user?.id,
+          discount_amount: calculations.discountAmount,
+          discount_percentage: formData.discount_percentage,
         });
 
       if (saleError) throw saleError;
@@ -400,6 +417,50 @@ export default function NewSale() {
           </div>
         </div>
 
+        {/* Discount/Offer */}
+        {selectedProduct && (
+          <div className="space-y-4">
+            <h3 className="font-semibold">Discount/Offer</h3>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label htmlFor="discount_amount">Flat Discount (₹)</Label>
+                <Input
+                  id="discount_amount"
+                  type="number"
+                  min="0"
+                  value={formData.discount_amount || ''}
+                  onChange={(e) => setFormData(prev => ({ 
+                    ...prev, 
+                    discount_amount: parseFloat(e.target.value) || 0,
+                    discount_percentage: 0 // Clear % when flat is used
+                  }))}
+                  placeholder="e.g. 200"
+                  className="h-12"
+                  disabled={formData.discount_percentage > 0}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="discount_percentage">Discount (%)</Label>
+                <Input
+                  id="discount_percentage"
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={formData.discount_percentage || ''}
+                  onChange={(e) => setFormData(prev => ({ 
+                    ...prev, 
+                    discount_percentage: parseFloat(e.target.value) || 0,
+                    discount_amount: 0 // Clear flat when % is used
+                  }))}
+                  placeholder="e.g. 10"
+                  className="h-12"
+                  disabled={formData.discount_amount > 0}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Payment Mode */}
         <div className="space-y-4">
           <h3 className="font-semibold">Payment</h3>
@@ -423,6 +484,16 @@ export default function NewSale() {
           <div className="space-y-3 p-4 rounded-xl bg-secondary/50 border">
             <div className="flex justify-between items-center">
               <span className="text-muted-foreground">Subtotal</span>
+              <span className="font-medium">{formatCurrency(calculations.subtotal)}</span>
+            </div>
+            {calculations.discountAmount > 0 && (
+              <div className="flex justify-between items-center text-destructive">
+                <span>Discount</span>
+                <span className="font-medium">-{formatCurrency(calculations.discountAmount)}</span>
+              </div>
+            )}
+            <div className="flex justify-between items-center">
+              <span className="text-muted-foreground">Net Sale</span>
               <span className="font-medium">{formatCurrency(calculations.saleAmount)}</span>
             </div>
             <div className="flex justify-between items-center">
@@ -434,7 +505,7 @@ export default function NewSale() {
               <span className="font-medium text-success">{formatCurrency(calculations.charityAmount)}</span>
             </div>
             <div className="flex justify-between items-center border-t pt-3">
-              <span className="font-semibold">Total</span>
+              <span className="font-semibold">Total to Collect</span>
               <span className="text-xl font-bold">{formatCurrency(calculations.saleAmount)}</span>
             </div>
           </div>
