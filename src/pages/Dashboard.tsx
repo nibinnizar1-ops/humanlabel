@@ -13,15 +13,19 @@ import {
   AlertTriangle,
   Plus,
   Users,
-  Receipt
+  Receipt,
+  IndianRupee,
+  Boxes
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 
 interface DashboardStats {
   todaySales: number;
-  monthlyRevenue: number;
-  totalInventory: number;
+  totalSales: number;
+  totalProducts: number;
+  totalStockValue: number;
+  totalMargin: number;
   totalCharity: number;
   lowStockCount: number;
 }
@@ -30,8 +34,10 @@ export default function Dashboard() {
   const { profile, role, canEdit } = useAuth();
   const [stats, setStats] = useState<DashboardStats>({
     todaySales: 0,
-    monthlyRevenue: 0,
-    totalInventory: 0,
+    totalSales: 0,
+    totalProducts: 0,
+    totalStockValue: 0,
+    totalMargin: 0,
     totalCharity: 0,
     lowStockCount: 0,
   });
@@ -45,42 +51,52 @@ export default function Dashboard() {
     try {
       const today = new Date();
       const startOfDay = new Date(today.setHours(0, 0, 0, 0)).toISOString();
-      const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1).toISOString();
 
-      // Fetch today's sales
-      const { data: todaySalesData } = await supabase
+      // Fetch all sales
+      const { data: salesData } = await supabase
         .from('sales')
-        .select('sale_amount')
-        .gte('sale_date', startOfDay);
+        .select('sale_amount, profit, charity_amount, sale_date');
 
-      // Fetch monthly revenue
-      const { data: monthlyData } = await supabase
-        .from('sales')
-        .select('sale_amount')
-        .gte('sale_date', startOfMonth);
+      // Fetch products with size inventory
+      const { data: productsData } = await supabase
+        .from('products')
+        .select('id, cost_price, selling_price, size_inventory, is_active');
 
-      // Fetch inventory
-      const { data: inventoryData } = await supabase
-        .from('inventory')
-        .select('available_quantity, low_stock_threshold');
+      // Calculate stats from sales
+      const todaySales = salesData?.filter(s => s.sale_date >= startOfDay)
+        .reduce((sum, s) => sum + Number(s.sale_amount), 0) || 0;
+      const totalSales = salesData?.reduce((sum, s) => sum + Number(s.sale_amount), 0) || 0;
+      const totalMargin = salesData?.reduce((sum, s) => sum + Number(s.profit), 0) || 0;
+      const totalCharity = salesData?.reduce((sum, s) => sum + Number(s.charity_amount), 0) || 0;
 
-      // Fetch total charity
-      const { data: charityData } = await supabase
-        .from('sales')
-        .select('charity_amount');
-
-      const todaySales = todaySalesData?.reduce((sum, s) => sum + Number(s.sale_amount), 0) || 0;
-      const monthlyRevenue = monthlyData?.reduce((sum, s) => sum + Number(s.sale_amount), 0) || 0;
-      const totalInventory = inventoryData?.reduce((sum, i) => sum + (i.available_quantity || 0), 0) || 0;
-      const totalCharity = charityData?.reduce((sum, s) => sum + Number(s.charity_amount), 0) || 0;
-      const lowStockCount = inventoryData?.filter(i => 
-        (i.available_quantity || 0) <= (i.low_stock_threshold || 5)
-      ).length || 0;
+      // Calculate product stats
+      const totalProducts = productsData?.length || 0;
+      
+      let totalStockValue = 0;
+      let lowStockCount = 0;
+      
+      productsData?.forEach(product => {
+        const sizeInventory = product.size_inventory || { M: 0, L: 0, XL: 0, XXL: 0 };
+        const totalUnits = Object.values(sizeInventory as Record<string, number>)
+          .reduce((sum: number, qty: number) => sum + (qty || 0), 0);
+        
+        // Stock value = total units × cost price
+        totalStockValue += totalUnits * product.cost_price;
+        
+        // Check for low stock (any size with 0 units on active products)
+        if (product.is_active) {
+          const hasStockOut = Object.values(sizeInventory as Record<string, number>)
+            .some((qty: number) => qty === 0);
+          if (hasStockOut) lowStockCount++;
+        }
+      });
 
       setStats({
         todaySales,
-        monthlyRevenue,
-        totalInventory,
+        totalSales,
+        totalProducts,
+        totalStockValue,
+        totalMargin,
         totalCharity,
         lowStockCount,
       });
@@ -101,10 +117,10 @@ export default function Dashboard() {
   };
 
   const quickActions = [
-    { icon: ShoppingCart, label: 'New Sale', path: '/sales/new', color: 'text-accent' },
-    { icon: Package, label: 'Add Product', path: '/products/new', color: 'text-primary', adminOnly: true },
-    { icon: Users, label: 'Customers', path: '/customers', color: 'text-profit' },
-    { icon: Receipt, label: 'Add Expense', path: '/expenses/new', color: 'text-warning', staffOnly: true },
+    { icon: ShoppingCart, label: 'New Sale', path: '/sales/new', color: 'text-foreground' },
+    { icon: Package, label: 'Add Product', path: '/products/new', color: 'text-foreground', adminOnly: true },
+    { icon: Users, label: 'Customers', path: '/customers', color: 'text-foreground' },
+    { icon: Receipt, label: 'Add Expense', path: '/expenses/new', color: 'text-foreground', staffOnly: true },
   ];
 
   const filteredActions = quickActions.filter(action => {
@@ -115,7 +131,7 @@ export default function Dashboard() {
 
   return (
     <AppLayout>
-      <PageHeader title="Dashboard" />
+      <PageHeader title="Dashboard" showLogo />
       
       <div className="p-4 space-y-6">
         {/* Welcome Section */}
@@ -128,7 +144,7 @@ export default function Dashboard() {
           </p>
         </div>
 
-        {/* Stats Grid */}
+        {/* Primary Stats Row */}
         <div className="grid grid-cols-2 gap-3">
           <StatCard
             label="Today's Sales"
@@ -137,27 +153,44 @@ export default function Dashboard() {
             variant="sales"
           />
           <StatCard
-            label="Monthly Revenue"
-            value={formatCurrency(stats.monthlyRevenue)}
-            icon={<TrendingUp className="h-5 w-5" />}
+            label="Total Sales"
+            value={formatCurrency(stats.totalSales)}
+            icon={<IndianRupee className="h-5 w-5" />}
             variant="profit"
-          />
-          <StatCard
-            label="Available Stock"
-            value={stats.totalInventory.toLocaleString()}
-            icon={<Package className="h-5 w-5" />}
-          />
-          <StatCard
-            label="Charity Generated"
-            value={formatCurrency(stats.totalCharity)}
-            icon={<Heart className="h-5 w-5" />}
-            variant="charity"
           />
         </div>
 
+        {/* Secondary Stats Row */}
+        <div className="grid grid-cols-3 gap-3">
+          <StatCard
+            label="Products"
+            value={stats.totalProducts.toString()}
+            icon={<Package className="h-5 w-5" />}
+          />
+          <StatCard
+            label="Stock Value"
+            value={formatCurrency(stats.totalStockValue)}
+            icon={<Boxes className="h-5 w-5" />}
+          />
+          <StatCard
+            label="Total Margin"
+            value={formatCurrency(stats.totalMargin)}
+            icon={<TrendingUp className="h-5 w-5" />}
+            variant="profit"
+          />
+        </div>
+
+        {/* Charity Stats */}
+        <StatCard
+          label="Charity Generated"
+          value={formatCurrency(stats.totalCharity)}
+          icon={<Heart className="h-5 w-5" />}
+          variant="charity"
+        />
+
         {/* Low Stock Alert */}
         {stats.lowStockCount > 0 && (
-          <Link to="/products?filter=low-stock">
+          <Link to="/products">
             <div className="stat-card bg-warning/10 border-warning/30 flex items-center gap-3">
               <div className="p-2 rounded-lg bg-warning/20">
                 <AlertTriangle className="h-5 w-5 text-warning" />
@@ -165,7 +198,7 @@ export default function Dashboard() {
               <div>
                 <p className="font-medium text-warning">Low Stock Alert</p>
                 <p className="text-sm text-muted-foreground">
-                  {stats.lowStockCount} product{stats.lowStockCount > 1 ? 's' : ''} running low
+                  {stats.lowStockCount} product{stats.lowStockCount > 1 ? 's' : ''} have size stock-outs
                 </p>
               </div>
             </div>
@@ -194,7 +227,7 @@ export default function Dashboard() {
         {/* Primary Action for Staff */}
         {canEdit && (
           <Link to="/sales/new" className="block">
-            <Button className="w-full h-14 text-base bg-accent hover:bg-accent/90">
+            <Button className="w-full h-14 text-base">
               <Plus className="mr-2 h-5 w-5" />
               Record New Sale
             </Button>

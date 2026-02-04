@@ -30,6 +30,8 @@ export function StatCard({
   className 
 }: StatCardProps) {
   const isGradient = ['charity', 'sales', 'profit'].includes(variant);
+  const valueStr = String(value);
+  const isLongValue = valueStr.length > 8;
 
   return (
     <div className={cn(
@@ -37,15 +39,20 @@ export function StatCard({
       variantStyles[variant],
       className
     )}>
-      <div className="flex items-start justify-between">
-        <div className="space-y-1">
+      <div className="flex items-start justify-between gap-2">
+        <div className="space-y-1 min-w-0 flex-1">
           <p className={cn(
-            "stat-card-label",
+            "stat-card-label truncate",
             isGradient && "text-white/80"
           )}>
             {label}
           </p>
-          <p className="stat-card-value">{value}</p>
+          <p className={cn(
+            "font-bold tracking-tight truncate",
+            isLongValue ? "text-lg" : "text-xl sm:text-2xl"
+          )}>
+            {value}
+          </p>
           {trend && (
             <p className={cn(
               "text-xs font-medium",
@@ -58,7 +65,7 @@ export function StatCard({
         </div>
         {icon && (
           <div className={cn(
-            "p-2 rounded-lg",
+            "p-2 rounded-lg flex-shrink-0",
             isGradient ? "bg-white/20" : "bg-secondary"
           )}>
             {icon}
