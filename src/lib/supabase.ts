@@ -108,6 +108,8 @@ export interface Sale {
   created_by: string | null;
   sale_date: string;
   created_at: string;
+  discount_amount: number;
+  discount_percentage: number;
 }
 
 export interface Expense {
