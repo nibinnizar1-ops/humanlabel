@@ -1,10 +1,25 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+/**
+ * In Lovable/Vite, `import.meta.env.VITE_*` values are injected at build time.
+ * If the preview was built before secrets were added, those can be undefined and
+ * crash the app. We use a fallback so the UI still loads, while keeping env vars
+ * as the primary source.
+ */
+const FALLBACK_SUPABASE_URL = 'https://xxntakevupxatojdxzff.supabase.co';
+// Anon keys are public by design, safe to ship in the client.
+const FALLBACK_SUPABASE_ANON_KEY =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh4bnRha2V2dXB4YXRvamR4emZmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAxODE5NDUsImV4cCI6MjA4NTc1Nzk0NX0.jIGLJ0kjj8pb5SEQyXVRB_qiM_eAtYiRStWTcorQjCY';
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables');
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || FALLBACK_SUPABASE_URL;
+const supabaseAnonKey =
+  import.meta.env.VITE_SUPABASE_ANON_KEY || FALLBACK_SUPABASE_ANON_KEY;
+
+if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
+  // eslint-disable-next-line no-console
+  console.warn(
+    '[Supabase] Missing VITE_SUPABASE_URL/VITE_SUPABASE_ANON_KEY in build; using fallback. '
+  );
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
