@@ -3,6 +3,7 @@ import { WidgetType } from '@/types/dashboard';
 // Product Widgets
 import {
   ProductsLifetimeStockValue,
+  ProductsLifetimeStockQuantity,
   ProductsCurrentInventoryValue,
   ProductsOutOfStockAlert,
   ProductsFastMoving,
@@ -59,6 +60,7 @@ interface WidgetRendererProps {
 const widgetComponents: Record<WidgetType, React.ComponentType<{ widgetId: string }>> = {
   // Products
   products_lifetime_stock_value: ProductsLifetimeStockValue,
+  products_lifetime_stock_quantity: ProductsLifetimeStockQuantity,
   products_current_inventory_value: ProductsCurrentInventoryValue,
   products_out_of_stock_alert: ProductsOutOfStockAlert,
   products_fast_moving: ProductsFastMoving,

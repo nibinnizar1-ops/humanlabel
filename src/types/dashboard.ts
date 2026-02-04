@@ -1,6 +1,7 @@
 export type WidgetType =
   // Products
   | 'products_lifetime_stock_value'
+  | 'products_lifetime_stock_quantity'
   | 'products_current_inventory_value'
   | 'products_out_of_stock_alert'
   | 'products_fast_moving'
@@ -62,6 +63,8 @@ export interface DashboardConfig {
 export const DEFAULT_WIDGETS: WidgetConfig[] = [
   // Products
   { id: 'products_total_count', title: 'Total Products', category: 'products', enabled: true, size: 'small' },
+  { id: 'products_lifetime_stock_value', title: 'Lifetime Stock Value', category: 'products', enabled: true, size: 'medium' },
+  { id: 'products_lifetime_stock_quantity', title: 'Lifetime Stock Quantity', category: 'products', enabled: false, size: 'small' },
   { id: 'products_current_inventory_value', title: 'Current Inventory Value', category: 'products', enabled: true, size: 'medium' },
   { id: 'products_out_of_stock_alert', title: 'Out of Stock Alert', category: 'products', enabled: true, size: 'medium' },
   { id: 'products_fast_moving', title: 'Fast Moving Products', category: 'products', enabled: false, size: 'large' },

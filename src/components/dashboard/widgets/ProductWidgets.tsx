@@ -11,7 +11,12 @@ interface ProductWidgetsProps {
 }
 
 export function ProductsLifetimeStockValue({ widgetId }: ProductWidgetsProps) {
-  const [value, setValue] = useState(0);
+  const [costValue, setCostValue] = useState(0);
+  const [sellingValue, setSellingValue] = useState(0);
+  const [currentCostValue, setCurrentCostValue] = useState(0);
+  const [currentSellingValue, setCurrentSellingValue] = useState(0);
+  const [soldCostValue, setSoldCostValue] = useState(0);
+  const [soldSellingValue, setSoldSellingValue] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -20,17 +25,75 @@ export function ProductsLifetimeStockValue({ widgetId }: ProductWidgetsProps) {
 
   const fetchData = async () => {
     try {
+      // Get all products with their cost prices, selling prices and current inventory
       const { data: products } = await supabase
         .from('products')
-        .select('cost_price, size_inventory');
+        .select('id, cost_price, selling_price, size_inventory');
 
-      if (products) {
-        const totalValue = products.reduce((sum, product) => {
+      // Get all sales to calculate sold quantities and actual sale amounts (with discounts)
+      const { data: sales } = await supabase
+        .from('sales')
+        .select('product_id, quantity, sale_amount, discount_amount');
+
+      if (products && sales) {
+        // Group sold quantities and actual sale amounts by product
+        const soldByProduct = sales.reduce((acc, sale) => {
+          if (!acc[sale.product_id]) {
+            acc[sale.product_id] = { quantity: 0, saleAmount: 0, discountAmount: 0 };
+          }
+          acc[sale.product_id].quantity += sale.quantity;
+          acc[sale.product_id].saleAmount += Number(sale.sale_amount || 0);
+          acc[sale.product_id].discountAmount += Number(sale.discount_amount || 0);
+          return acc;
+        }, {} as Record<string, { quantity: number; saleAmount: number; discountAmount: number }>);
+
+        // Calculate for each product
+        let totalCostValue = 0;
+        let totalSellingValue = 0;
+        let currentCostTotal = 0;
+        let currentSellingTotal = 0;
+        let soldCostTotal = 0;
+        let soldSellingTotal = 0;
+        let totalDiscountAmount = 0;
+
+        products.forEach(product => {
           const inventory = product.size_inventory || { M: 0, L: 0, XL: 0, XXL: 0 };
-          const totalUnits = Object.values(inventory).reduce((s: number, q: number) => s + (q || 0), 0);
-          return sum + (totalUnits * product.cost_price);
-        }, 0);
-        setValue(totalValue);
+          const currentUnits = Object.values(inventory).reduce((s: number, q: number) => s + (q || 0), 0);
+          const soldData = soldByProduct[product.id] || { quantity: 0, saleAmount: 0, discountAmount: 0 };
+          const soldUnits = soldData.quantity;
+          const lifetimeUnits = currentUnits + soldUnits;
+
+          // Cost value calculations (cost_price × quantity)
+          const productCurrentCostValue = currentUnits * product.cost_price;
+          const productSoldCostValue = soldUnits * product.cost_price;
+          const productLifetimeCostValue = lifetimeUnits * product.cost_price;
+
+          // Selling value calculations
+          // For current stock: use selling_price (no discount applied yet)
+          const productCurrentSellingValue = currentUnits * product.selling_price;
+          
+          // For sold stock: use actual sale_amount (already includes discounts)
+          // This is the actual amount collected after discounts
+          const productSoldSellingValue = soldData.saleAmount;
+          
+          // Lifetime selling value = current stock at selling_price + sold stock at actual sale_amount
+          const productLifetimeSellingValue = productCurrentSellingValue + productSoldSellingValue;
+
+          totalCostValue += productLifetimeCostValue;
+          totalSellingValue += productLifetimeSellingValue;
+          currentCostTotal += productCurrentCostValue;
+          currentSellingTotal += productCurrentSellingValue;
+          soldCostTotal += productSoldCostValue;
+          soldSellingTotal += productSoldSellingValue;
+          totalDiscountAmount += soldData.discountAmount;
+        });
+
+        setCostValue(totalCostValue);
+        setSellingValue(totalSellingValue);
+        setCurrentCostValue(currentCostTotal);
+        setCurrentSellingValue(currentSellingTotal);
+        setSoldCostValue(soldCostTotal);
+        setSoldSellingValue(soldSellingTotal);
       }
     } catch (error) {
       console.error('Error fetching lifetime stock value:', error);
@@ -42,9 +105,47 @@ export function ProductsLifetimeStockValue({ widgetId }: ProductWidgetsProps) {
   if (loading) return <BaseWidget title="Lifetime Stock Value" icon={<Boxes className="h-4 w-4" />}>Loading...</BaseWidget>;
 
   return (
-    <BaseWidget title="Lifetime Stock Value" icon={<Boxes className="h-4 w-4" />}>
-      <p className="text-xl sm:text-2xl font-bold">{formatCurrency(value)}</p>
-      <p className="text-xs text-muted-foreground mt-1">Total value of all stock ever purchased</p>
+    <BaseWidget title="Lifetime Stock Value" icon={<Boxes className="h-4 w-4" />} size="large">
+      <div className="space-y-3">
+        {/* Cost Value Section */}
+        <div className="space-y-2">
+          <div>
+            <p className="text-xs text-muted-foreground mb-1">Cost Value (Cost Price × Quantity)</p>
+            <p className="text-xl sm:text-2xl font-bold">{formatCurrency(costValue)}</p>
+          </div>
+          <div className="pt-2 border-t space-y-1.5">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted-foreground">Current Stock:</span>
+              <span className="font-medium">{formatCurrency(currentCostValue)}</span>
+            </div>
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted-foreground">Sold Stock:</span>
+              <span className="font-medium">{formatCurrency(soldCostValue)}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Selling Value Section */}
+        <div className="space-y-2 pt-2 border-t">
+          <div>
+            <p className="text-xs text-muted-foreground mb-1">Selling Value (After Discounts)</p>
+            <p className="text-xl sm:text-2xl font-bold text-success">{formatCurrency(sellingValue)}</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Current: Selling Price × Qty | Sold: Actual Sale Amount (with discounts)
+            </p>
+          </div>
+          <div className="pt-2 border-t space-y-1.5">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted-foreground">Current Stock (at selling price):</span>
+              <span className="font-medium">{formatCurrency(currentSellingValue)}</span>
+            </div>
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted-foreground">Sold Stock (actual collected):</span>
+              <span className="font-medium">{formatCurrency(soldSellingValue)}</span>
+            </div>
+          </div>
+        </div>
+      </div>
     </BaseWidget>
   );
 }
@@ -253,6 +354,74 @@ export function ProductsTotalCount({ widgetId }: ProductWidgetsProps) {
     <BaseWidget title="Total Products" icon={<Package className="h-4 w-4" />}>
       <p className="text-xl sm:text-2xl font-bold">{count}</p>
       <p className="text-xs text-muted-foreground mt-1">Total products in catalog</p>
+    </BaseWidget>
+  );
+}
+
+export function ProductsLifetimeStockQuantity({ widgetId }: ProductWidgetsProps) {
+  const [currentUnits, setCurrentUnits] = useState(0);
+  const [soldUnits, setSoldUnits] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      // Get all products with their current inventory
+      const { data: products } = await supabase
+        .from('products')
+        .select('id, size_inventory');
+
+      // Get all sales to calculate sold quantities
+      const { data: sales } = await supabase
+        .from('sales')
+        .select('quantity');
+
+      if (products && sales) {
+        // Calculate current inventory units
+        const currentInventoryUnits = products.reduce((sum, product) => {
+          const inventory = product.size_inventory || { M: 0, L: 0, XL: 0, XXL: 0 };
+          const totalUnits = Object.values(inventory).reduce((s: number, q: number) => s + (q || 0), 0);
+          return sum + totalUnits;
+        }, 0);
+
+        // Calculate sold units
+        const soldInventoryUnits = sales.reduce((sum, sale) => {
+          return sum + sale.quantity;
+        }, 0);
+
+        setCurrentUnits(currentInventoryUnits);
+        setSoldUnits(soldInventoryUnits);
+      }
+    } catch (error) {
+      console.error('Error fetching lifetime stock quantity:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) return <BaseWidget title="Lifetime Stock Quantity" icon={<Boxes className="h-4 w-4" />}>Loading...</BaseWidget>;
+
+  const lifetimeUnits = currentUnits + soldUnits;
+
+  return (
+    <BaseWidget title="Lifetime Stock Quantity" icon={<Boxes className="h-4 w-4" />}>
+      <div className="space-y-2">
+        <p className="text-xl sm:text-2xl font-bold">{lifetimeUnits.toLocaleString()}</p>
+        <p className="text-xs text-muted-foreground mt-1">Total units ever purchased</p>
+        <div className="pt-2 border-t space-y-1 text-xs">
+          <div className="flex items-center justify-between">
+            <span className="text-muted-foreground">Current:</span>
+            <span className="font-medium">{currentUnits.toLocaleString()}</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-muted-foreground">Sold:</span>
+            <span className="font-medium">{soldUnits.toLocaleString()}</span>
+          </div>
+        </div>
+      </div>
     </BaseWidget>
   );
 }
