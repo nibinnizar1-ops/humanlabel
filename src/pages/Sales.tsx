@@ -6,7 +6,17 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, ShoppingCart, CreditCard, Banknote, Smartphone, Globe, Store, Trash2 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Plus, ShoppingCart, CreditCard, Banknote, Smartphone, Globe, Store, Trash2, Download, Calendar } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 
@@ -14,6 +24,12 @@ export default function Sales() {
   const { canEdit } = useAuth();
   const [sales, setSales] = useState<SaleWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
+  const [exportDialogOpen, setExportDialogOpen] = useState(false);
+  const [dateRange, setDateRange] = useState({
+    startDate: new Date(new Date().setDate(new Date().getDate() - 30)).toISOString().split('T')[0], // Last 30 days
+    endDate: new Date().toISOString().split('T')[0], // Today
+  });
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     fetchSales();
@@ -130,19 +146,108 @@ export default function Sales() {
     return groups;
   }, {} as Record<string, SaleWithDetails[]>);
 
+  const handleExportCSV = async () => {
+    if (!dateRange.startDate || !dateRange.endDate) {
+      toast.error('Please select both start and end dates');
+      return;
+    }
+
+    setExporting(true);
+
+    try {
+      // Fetch sales within date range
+      const startDate = new Date(dateRange.startDate);
+      startDate.setHours(0, 0, 0, 0);
+      const endDate = new Date(dateRange.endDate);
+      endDate.setHours(23, 59, 59, 999);
+
+      const { data: salesData, error } = await supabase
+        .from('sales')
+        .select(`
+          *,
+          customer:customers(*),
+          product:products(*)
+        `)
+        .gte('sale_date', startDate.toISOString())
+        .lte('sale_date', endDate.toISOString())
+        .order('sale_date', { ascending: true });
+
+      if (error) throw error;
+
+      if (!salesData || salesData.length === 0) {
+        toast.error('No sales found for the selected date range');
+        setExporting(false);
+        return;
+      }
+
+      // Prepare CSV data
+      const csvHeaders = ['SKU', 'Product Name', 'Size', 'Qty', 'Sold amount after discount', 'Mode', 'Customer name'];
+      
+      const csvRows = salesData.map((sale) => {
+        const sku = sale.product?.sku || 'N/A';
+        const productName = sale.product?.name || 'Unknown Product';
+        const size = sale.size || 'N/A';
+        const qty = sale.quantity.toString();
+        const soldAmount = sale.sale_amount.toString();
+        const mode = sale.payment_mode;
+        const customerName = sale.customer?.name || 'Walk-in';
+
+        return [sku, productName, size, qty, soldAmount, mode, customerName];
+      });
+
+      // Create CSV content
+      const csvContent = [
+        csvHeaders.join(','),
+        ...csvRows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+      ].join('\n');
+
+      // Create blob and download
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      
+      link.setAttribute('href', url);
+      link.setAttribute('download', `sales_${dateRange.startDate}_to_${dateRange.endDate}.csv`);
+      link.style.visibility = 'hidden';
+      
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast.success(`Exported ${salesData.length} sales to CSV`);
+      setExportDialogOpen(false);
+    } catch (error: any) {
+      console.error('Error exporting CSV:', error);
+      toast.error(error.message || 'Failed to export CSV');
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
     <AppLayout>
       <PageHeader 
         title="Sales" 
         action={
-          canEdit && (
-            <Link to="/sales/new">
-              <Button size="sm" className="bg-accent hover:bg-accent/90">
-                <Plus className="h-4 w-4 mr-1" />
-                New Sale
-              </Button>
-            </Link>
-          )
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setExportDialogOpen(true)}
+              className="gap-2"
+            >
+              <Download className="h-4 w-4" />
+              <span className="hidden sm:inline">Export CSV</span>
+            </Button>
+            {canEdit && (
+              <Link to="/sales/new">
+                <Button size="sm" className="bg-accent hover:bg-accent/90">
+                  <Plus className="h-4 w-4 mr-1" />
+                  New Sale
+                </Button>
+              </Link>
+            )}
+          </div>
         }
       />
 
@@ -246,6 +351,70 @@ export default function Sales() {
             </div>
           ))
         )}
+
+        {/* Export CSV Dialog */}
+        <Dialog open={exportDialogOpen} onOpenChange={setExportDialogOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Export Sales to CSV</DialogTitle>
+              <DialogDescription>
+                Select a date range to export sales data. The CSV will include: SKU, Product Name, Size, Qty, Sold amount after discount, Mode, and Customer name.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="startDate">Start Date</Label>
+                <Input
+                  id="startDate"
+                  type="date"
+                  value={dateRange.startDate}
+                  onChange={(e) => setDateRange({ ...dateRange, startDate: e.target.value })}
+                  className="h-12"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="endDate">End Date</Label>
+                <Input
+                  id="endDate"
+                  type="date"
+                  value={dateRange.endDate}
+                  onChange={(e) => setDateRange({ ...dateRange, endDate: e.target.value })}
+                  className="h-12"
+                  max={new Date().toISOString().split('T')[0]}
+                />
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setExportDialogOpen(false)}
+                disabled={exporting}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleExportCSV}
+                disabled={exporting || !dateRange.startDate || !dateRange.endDate}
+                className="bg-accent hover:bg-accent/90"
+              >
+                {exporting ? (
+                  <>
+                    <Download className="mr-2 h-4 w-4 animate-pulse" />
+                    Exporting...
+                  </>
+                ) : (
+                  <>
+                    <Download className="mr-2 h-4 w-4" />
+                    Export CSV
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </AppLayout>
   );
