@@ -11,14 +11,16 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import logo from '@/assets/logo.png';
 
 interface PageHeaderProps {
   title: string;
   showBack?: boolean;
   action?: ReactNode;
+  showLogo?: boolean;
 }
 
-export function PageHeader({ title, showBack, action }: PageHeaderProps) {
+export function PageHeader({ title, showBack, action, showLogo }: PageHeaderProps) {
   const navigate = useNavigate();
   const { profile, role, signOut } = useAuth();
 
@@ -47,7 +49,11 @@ export function PageHeader({ title, showBack, action }: PageHeaderProps) {
               <ChevronLeft className="h-5 w-5" />
             </Button>
           )}
-          <h1 className="text-lg font-semibold">{title}</h1>
+          {showLogo ? (
+            <img src={logo} alt="Human Label" className="h-6" />
+          ) : (
+            <h1 className="text-lg font-semibold">{title}</h1>
+          )}
         </div>
 
         <div className="flex items-center gap-2">

@@ -6,7 +6,7 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, ShoppingCart, CreditCard, Banknote, Smartphone } from 'lucide-react';
+import { Plus, ShoppingCart, CreditCard, Banknote, Smartphone, Globe, Store } from 'lucide-react';
 import { format } from 'date-fns';
 
 export default function Sales() {
@@ -114,31 +114,46 @@ export default function Sales() {
                 {daySales.map((sale) => {
                   const PaymentIcon = getPaymentIcon(sale.payment_mode);
                   
-                  return (
-                    <div key={sale.id} className="stat-card">
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <h4 className="font-medium truncate">
-                              {sale.product?.name || 'Unknown Product'}
-                            </h4>
-                            <Badge variant="secondary" className="text-xs">
-                              ×{sale.quantity}
-                            </Badge>
+                    return (
+                      <div key={sale.id} className="stat-card">
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <h4 className="font-medium truncate">
+                                {sale.product?.name || 'Unknown Product'}
+                              </h4>
+                              <Badge variant="secondary" className="text-xs">
+                                ×{sale.quantity}
+                              </Badge>
+                              {(sale as any).size && (
+                                <Badge variant="outline" className="text-xs">
+                                  {(sale as any).size}
+                                </Badge>
+                              )}
+                            </div>
+                            <p className="text-sm text-muted-foreground">
+                              {sale.customer?.name || 'Walk-in'} • {format(new Date(sale.sale_date), 'h:mm a')}
+                            </p>
                           </div>
-                          <p className="text-sm text-muted-foreground">
-                            {sale.customer?.name || 'Walk-in'} • {format(new Date(sale.sale_date), 'h:mm a')}
-                          </p>
-                        </div>
 
-                        <div className="text-right flex-shrink-0">
-                          <p className="font-semibold">{formatCurrency(sale.sale_amount)}</p>
-                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                            <PaymentIcon className="h-3 w-3" />
-                            {sale.payment_mode}
+                          <div className="text-right flex-shrink-0">
+                            <p className="font-semibold">{formatCurrency(sale.sale_amount)}</p>
+                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                              <PaymentIcon className="h-3 w-3" />
+                              {sale.payment_mode}
+                              {(sale as any).sale_mode && (
+                                <>
+                                  <span className="mx-1">•</span>
+                                  {(sale as any).sale_mode === 'Online' ? (
+                                    <Globe className="h-3 w-3" />
+                                  ) : (
+                                    <Store className="h-3 w-3" />
+                                  )}
+                                </>
+                              )}
+                            </div>
                           </div>
                         </div>
-                      </div>
 
                       <div className="flex items-center gap-3 mt-2 pt-2 border-t text-xs">
                         <span className="text-profit">

@@ -1,13 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase, Product } from '@/lib/supabase';
+import { supabase, SizeInventory } from '@/lib/supabase';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import {
   Select,
@@ -18,8 +17,17 @@ import {
 } from '@/components/ui/select';
 import { Loader2, Save, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { ProductImageUpload } from '@/components/products/ProductImageUpload';
+import { SizeInventoryInput } from '@/components/products/SizeInventoryInput';
 
 const categories = ['Shirt', 'T-Shirt', 'Hoodie', 'Pants', 'Accessory'] as const;
+
+const defaultSizeInventory: SizeInventory = {
+  M: 0,
+  L: 0,
+  XL: 0,
+  XXL: 0,
+};
 
 export default function ProductForm() {
   const { id } = useParams();
@@ -37,7 +45,8 @@ export default function ProductForm() {
     selling_price: '',
     charity_percentage: '10',
     is_active: true,
-    initial_quantity: '0',
+    image_url: null as string | null,
+    size_inventory: defaultSizeInventory,
   });
 
   useEffect(() => {
@@ -51,7 +60,7 @@ export default function ProductForm() {
     try {
       const { data, error } = await supabase
         .from('products')
-        .select('*, inventory(*)')
+        .select('*')
         .eq('id', id)
         .single();
 
@@ -65,7 +74,8 @@ export default function ProductForm() {
         selling_price: String(data.selling_price),
         charity_percentage: String(data.charity_percentage),
         is_active: data.is_active,
-        initial_quantity: String(data.inventory?.quantity_added || 0),
+        image_url: data.image_url || null,
+        size_inventory: data.size_inventory || defaultSizeInventory,
       });
     } catch (error) {
       console.error('Error fetching product:', error);
@@ -88,6 +98,8 @@ export default function ProductForm() {
         selling_price: parseFloat(formData.selling_price),
         charity_percentage: parseFloat(formData.charity_percentage),
         is_active: formData.is_active,
+        image_url: formData.image_url,
+        size_inventory: formData.size_inventory,
       };
 
       if (isEditing) {
@@ -97,34 +109,13 @@ export default function ProductForm() {
           .eq('id', id);
 
         if (error) throw error;
-
-        // Update inventory if quantity changed
-        if (formData.initial_quantity) {
-          await supabase
-            .from('inventory')
-            .update({ quantity_added: parseInt(formData.initial_quantity) })
-            .eq('product_id', id);
-        }
-
         toast.success('Product updated successfully');
       } else {
-        const { data: newProduct, error } = await supabase
+        const { error } = await supabase
           .from('products')
-          .insert(productData)
-          .select()
-          .single();
+          .insert(productData);
 
         if (error) throw error;
-
-        // Create inventory record
-        await supabase
-          .from('inventory')
-          .insert({
-            product_id: newProduct.id,
-            quantity_added: parseInt(formData.initial_quantity) || 0,
-            quantity_sold: 0,
-          });
-
         toast.success('Product created successfully');
       }
 
@@ -162,12 +153,14 @@ export default function ProductForm() {
     ? ((parseFloat(formData.selling_price) - parseFloat(formData.cost_price)) * parseFloat(formData.charity_percentage) / 100).toFixed(2)
     : '0';
 
+  const totalStock = Object.values(formData.size_inventory).reduce((sum, qty) => sum + qty, 0);
+
   if (loading) {
     return (
       <AppLayout>
         <PageHeader title={isEditing ? 'Edit Product' : 'New Product'} showBack />
         <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-6 w-6 animate-spin text-accent" />
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
         </div>
       </AppLayout>
     );
@@ -188,6 +181,15 @@ export default function ProductForm() {
       />
 
       <form onSubmit={handleSubmit} className="p-4 space-y-6">
+        {/* Product Image */}
+        <div className="space-y-2">
+          <Label>Product Photo</Label>
+          <ProductImageUpload
+            value={formData.image_url}
+            onChange={(url) => setFormData({ ...formData, image_url: url })}
+          />
+        </div>
+
         {/* Basic Info */}
         <div className="space-y-4">
           <div className="space-y-2">
@@ -288,27 +290,20 @@ export default function ProductForm() {
             </div>
             <div className="stat-card gradient-charity">
               <p className="text-xs text-white/80">Charity per Unit</p>
-              <p className="text-lg font-semibold">₹{charityPerUnit}</p>
+              <p className="text-lg font-semibold text-white">₹{charityPerUnit}</p>
             </div>
           </div>
         </div>
 
-        {/* Inventory */}
+        {/* Size Inventory */}
         <div className="space-y-4">
-          <h3 className="font-semibold">Inventory</h3>
-          
-          <div className="space-y-2">
-            <Label htmlFor="initial_quantity">
-              {isEditing ? 'Total Quantity Added' : 'Initial Stock'}
-            </Label>
-            <Input
-              id="initial_quantity"
-              type="number"
-              min="0"
-              value={formData.initial_quantity}
-              onChange={(e) => setFormData({ ...formData, initial_quantity: e.target.value })}
-              placeholder="100"
-            />
+          <h3 className="font-semibold">Size Inventory</h3>
+          <SizeInventoryInput
+            value={formData.size_inventory}
+            onChange={(size_inventory) => setFormData({ ...formData, size_inventory })}
+          />
+          <div className="text-sm text-muted-foreground">
+            Total stock: {totalStock} units
           </div>
         </div>
 
@@ -328,7 +323,7 @@ export default function ProductForm() {
         {/* Submit */}
         <Button 
           type="submit" 
-          className="w-full h-12 bg-accent hover:bg-accent/90"
+          className="w-full h-12"
           disabled={saving}
         >
           {saving ? (
