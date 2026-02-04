@@ -5,8 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Heart, Eye, EyeOff } from 'lucide-react';
+import { Loader2, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
+import logo from '@/assets/logo.png';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -43,11 +44,8 @@ export default function Login() {
     <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4">
       <div className="w-full max-w-sm space-y-6">
         {/* Logo */}
-        <div className="text-center space-y-2">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary">
-            <Heart className="h-8 w-8 text-primary-foreground" />
-          </div>
-          <h1 className="text-2xl font-bold tracking-tight">Human Label</h1>
+        <div className="text-center space-y-4">
+          <img src={logo} alt="Human Label" className="h-8 mx-auto" />
           <p className="text-sm text-muted-foreground">Internal Dashboard</p>
         </div>
 
@@ -100,7 +98,7 @@ export default function Login() {
 
               <Button
                 type="submit"
-                className="w-full h-11 bg-accent hover:bg-accent/90 text-accent-foreground"
+                className="w-full h-11"
                 disabled={isLoading}
               >
                 {isLoading ? (
