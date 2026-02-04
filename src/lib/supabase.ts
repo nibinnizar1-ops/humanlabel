@@ -26,6 +26,8 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // Types for the database
 export type AppRole = 'admin' | 'staff' | 'viewer';
+export type Size = 'M' | 'L' | 'XL' | 'XXL';
+export type SaleMode = 'Online' | 'Offline';
 
 export interface Profile {
   id: string;
@@ -43,16 +45,25 @@ export interface UserRole {
   created_at: string;
 }
 
+export interface SizeInventory {
+  M: number;
+  L: number;
+  XL: number;
+  XXL: number;
+}
+
 export interface Product {
   id: string;
   name: string;
   category: 'Shirt' | 'T-Shirt' | 'Hoodie' | 'Pants' | 'Accessory';
   sku: string;
+  image_url: string | null;
   images: string[];
   cost_price: number;
   selling_price: number;
   charity_percentage: number;
   is_active: boolean;
+  size_inventory: SizeInventory;
   created_at: string;
   updated_at: string;
 }
@@ -84,13 +95,16 @@ export interface Sale {
   customer_id: string | null;
   product_id: string;
   quantity: number;
+  size: Size | null;
   payment_mode: 'Cash' | 'UPI' | 'Card';
+  sale_mode: SaleMode;
   unit_price: number;
   sale_amount: number;
   cost_amount: number;
   profit: number;
   charity_percentage: number;
   charity_amount: number;
+  customer_email: string | null;
   created_by: string | null;
   sale_date: string;
   created_at: string;
